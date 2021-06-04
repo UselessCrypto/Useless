@@ -733,13 +733,6 @@ contract Useless is Context, IERC20, Ownable {
         return tokenFromReflection(_rOwned[account]);
     }
 
-    //UGH
-	function withdraw() external onlyOwner nonReentrant{
-		uint256 balance = IERC20(address(this)).balanceOf(address(this));
-		IERC20(address(this)).transfer(msg.sender, balance);
-		payable(msg.sender).transfer(address(this).balance);
-	}
-
     function transfer(address recipient, uint256 amount) public override returns (bool) {
         _transfer(_msgSender(), recipient, amount);
         return true;
@@ -803,6 +796,12 @@ contract Useless is Context, IERC20, Ownable {
         uint256 currentRate =  _getRate();
         return rAmount.div(currentRate);
     }
+
+	function withdraw() external onlyOwner {
+		uint256 balance = IERC20(address(this)).balanceOf(address(this));
+		IERC20(address(this)).transfer(msg.sender, balance);
+		payable(msg.sender).transfer(address(this).balance);
+	}
 
     function excludeFromReward(address account) public onlyOwner() {
         require(!_isExcluded[account], "Account is already excluded");
