@@ -5,10 +5,10 @@
     4% goes to holders
     4% is auto-locked to liquidity
     100% is useless
-    www.uselesstoken.com
+    www.uselesscrypto.com
  */
 
-pragma solidity 0.6.5;
+pragma solidity ^0.6.12;
 // SPDX-License-Identifier: Unlicensed
 interface IERC20 {
 
@@ -305,7 +305,7 @@ library Address {
      * _Available since v3.1._
      */
     function functionCall(address target, bytes memory data) internal returns (bytes memory) {
-      return functionCall(target, data, "Address: low-level call failed");
+        return functionCall(target, data, "Address: low-level call failed");
     }
 
     /**
@@ -399,7 +399,7 @@ contract Ownable is Context {
         _;
     }
 
-     /**
+    /**
      * @dev Leaves the contract without owner. It will not be possible to call
      * `onlyOwner` functions anymore. Can only be called by the current owner.
      *
@@ -442,6 +442,7 @@ contract Ownable is Context {
     }
 }
 
+// pragma solidity >=0.5.0;
 interface IUniswapV2Factory {
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
 
@@ -457,6 +458,9 @@ interface IUniswapV2Factory {
     function setFeeTo(address) external;
     function setFeeToSetter(address) external;
 }
+
+
+// pragma solidity >=0.5.0;
 
 interface IUniswapV2Pair {
     event Approval(address indexed owner, address indexed spender, uint value);
@@ -508,6 +512,8 @@ interface IUniswapV2Pair {
 
     function initialize(address, address) external;
 }
+
+// pragma solidity >=0.6.2;
 
 interface IUniswapV2Router01 {
     function factory() external pure returns (address);
@@ -603,6 +609,10 @@ interface IUniswapV2Router01 {
     function getAmountsIn(uint amountOut, address[] calldata path) external view returns (uint[] memory amounts);
 }
 
+
+
+// pragma solidity >=0.6.2;
+
 interface IUniswapV2Router02 is IUniswapV2Router01 {
     function removeLiquidityETHSupportingFeeOnTransferTokens(
         address token,
@@ -658,13 +668,13 @@ contract Useless is Context, IERC20, Ownable {
     address[] private _excluded;
 
     uint256 private constant MAX = ~uint256(0);
-    uint256 private constant _tTotal = 1 * 10**15 * 10**9;
+    uint256 private _tTotal = 1000000000 * 10**6 * 10**9;
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
 
-    string private constant _name = "Useless";
-    string private constant _symbol = "USELESS";
-    uint8 private constant _decimals = 9;
+    string private _name = "Useless";
+    string private _symbol = "USELESS";
+    uint8 private _decimals = 9;
 
     uint256 public _taxFee = 0;
     uint256 private _previousTaxFee = _taxFee;
@@ -680,8 +690,8 @@ contract Useless is Context, IERC20, Ownable {
     bool public swapAndLiquifyEnabled = false;
 
     uint256 public _maxTxAmount = 1000000000 * 10**6 * 10**9;
-    uint256 public _numTokensSellToAddToLiquidity = 0;
-
+    uint256 private numTokensSellToAddToLiquidity = 500000 * 10**6 * 10**9;
+    
     event MinTokensBeforeSwapUpdated(uint256 minTokensBeforeSwap);
     event SwapAndLiquifyEnabledUpdated(bool enabled);
     event SwapAndLiquify(
@@ -837,13 +847,12 @@ contract Useless is Context, IERC20, Ownable {
             }
         }
     }
-
-    function _transferBothExcluded(address sender, address recipient, uint256 tAmount) private {
+        function _transferBothExcluded(address sender, address recipient, uint256 tAmount) private {
         (uint256 rAmount, uint256 rTransferAmount, uint256 rFee, uint256 tTransferAmount, uint256 tFee, uint256 tLiquidity) = _getValues(tAmount);
         _tOwned[sender] = _tOwned[sender].sub(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
         _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
+        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);        
         _takeLiquidity(tLiquidity);
         _reflectFee(rFee, tFee);
         emit Transfer(sender, recipient, tTransferAmount);
@@ -865,10 +874,6 @@ contract Useless is Context, IERC20, Ownable {
         _liquidityFee = liquidityFee;
     }
 
-    function setNumTokensSellToAddToLiquidity(uint256 numTokensSellToAddToLiquidity) external onlyOwner() {
-        _numTokensSellToAddToLiquidity = numTokensSellToAddToLiquidity;
-    }
-
     function blacklistAddress(address account) public onlyOwner() {
         _isBlacklisted[account] = true;
     }
@@ -886,9 +891,9 @@ contract Useless is Context, IERC20, Ownable {
     function setDefaultSettings() external onlyOwner() {
         _taxFee = 4;
         _liquidityFee = 4;
-        _numTokensSellToAddToLiquidity = 500000 * 10**6 * 10**9;
         swapAndLiquifyEnabled = true;
         _maxTxAmount = 1000000000 * 10**6 * 10**9;
+        numTokensSellToAddToLiquidity = 500000 * 10**6 * 10**9;
     }
 
     function setMaxTxAmount(uint256 maxTxAmount) external onlyOwner() {
@@ -1031,14 +1036,14 @@ contract Useless is Context, IERC20, Ownable {
             contractTokenBalance = _maxTxAmount;
         }
 
-        bool overMinTokenBalance = contractTokenBalance >= _numTokensSellToAddToLiquidity;
+        bool overMinTokenBalance = contractTokenBalance >= numTokensSellToAddToLiquidity;
         if (
             overMinTokenBalance &&
             !inSwapAndLiquify &&
             from != uniswapV2Pair &&
             swapAndLiquifyEnabled
         ) {
-            contractTokenBalance = _numTokensSellToAddToLiquidity;
+            contractTokenBalance = numTokensSellToAddToLiquidity;
             //add liquidity
             swapAndLiquify(contractTokenBalance);
         }
@@ -1111,8 +1116,6 @@ contract Useless is Context, IERC20, Ownable {
         );
     }
 
-
-    // Useless Fixed the condition
     //this method is responsible for taking all fee, if takeFee is true
     function _tokenTransfer(address sender, address recipient, uint256 amount,bool takeFee) private {
         if(!takeFee)
@@ -1122,6 +1125,8 @@ contract Useless is Context, IERC20, Ownable {
             _transferFromExcluded(sender, recipient, amount);
         } else if (!_isExcluded[sender] && _isExcluded[recipient]) {
             _transferToExcluded(sender, recipient, amount);
+        } else if (!_isExcluded[sender] && !_isExcluded[recipient]) {
+            _transferStandard(sender, recipient, amount);
         } else if (_isExcluded[sender] && _isExcluded[recipient]) {
             _transferBothExcluded(sender, recipient, amount);
         } else {
@@ -1160,8 +1165,4 @@ contract Useless is Context, IERC20, Ownable {
         _reflectFee(rFee, tFee);
         emit Transfer(sender, recipient, tTransferAmount);
     }
-
-
-
-
 }
